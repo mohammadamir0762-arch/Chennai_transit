@@ -1,0 +1,81 @@
+{
+  "app": {
+    "title": "Chennai Transit Route Finder",
+    "description": "Find bus and suburban train routes across Chennai."
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "ta": "தமிழ்"
+  },
+  "search": {
+    "from": "From",
+    "fromPlaceholder": "Starting point",
+    "to": "To",
+    "toPlaceholder": "Destination",
+    "swap": "Swap start and destination",
+    "leavingAt": "Leaving at",
+    "now": "Now",
+    "nowHint": "Set the departure time to right now",
+    "submit": "Find routes",
+    "submitting": "Finding routes…"
+  },
+  "autocomplete": {
+    "listLabel": "Stop suggestions for {field}",
+    "status": {
+      "one": "{count} stop suggestion. Use the arrow keys to review it.",
+      "other": "{count} stop suggestions. Use the arrow keys to review them."
+    },
+    "noStatus": "No matching stops."
+  },
+  "results": {
+    "heading": "Routes",
+    "none": "No routes found for this trip. Try a different start or destination.",
+    "searching": "Searching for routes…",
+    "found": {
+      "one": "{count} route found.",
+      "other": "{count} routes found."
+    },
+    "showOnMap": "Show this route on the map",
+    "minutes": "{count} min",
+    "walkTo": "Walk to {stop}",
+    "walkToDestination": "Walk to your destination",
+    "changeAt": "Change at {stop}",
+    "changeWait": "{count} min wait",
+    "walking": "{count} min walking",
+    "mode": {
+      "BUS": {
+        "one": "{count} bus",
+        "other": "{count} buses"
+      },
+      "TRAIN": {
+        "one": "{count} train",
+        "other": "{count} trains"
+      }
+    }
+  },
+  "map": {
+    "label": "Route map",
+    "placeholder": "Search a trip to see it on the map.",
+    "loading": "Loading map…",
+    "board": "Board {line} at {time}"
+  },
+  "errors": {
+    "missing_params": "Enter both a starting point and a destination.",
+    "location_not_found": "We couldn't find one of those places. Try a more specific place name or address.",
+    "geocoding_failed": "Place lookup is unavailable right now. Please try again.",
+    "routing_error": "The routing service is unavailable right now. Please try again.",
+    "network": "Couldn't reach the server. Check your connection and try again.",
+    "unknown": "Something went wrong. Please try again."
+  },
+  "notice": {
+    "scheduledHeading": "Scheduled times, not live tracking.",
+    "scheduledBody": "Buses and trains run late; treat these as planning estimates and leave buffer time.",
+    "source": "Schedule data is community-maintained",
+    "sourceWith": "Schedule data is community-maintained ({sources})",
+    "updated": ", last updated {date}",
+    "changed": ". Routes and stops may have changed since.",
+    "stopNames": "Stop names are shown as the schedule publishes them, in English only.",
+    "map": "Map data © {link} contributors."
+  }
+}

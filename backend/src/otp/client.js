@@ -74,7 +74,7 @@ function formatClockTime(epochMs) {
 export function mapItinerariesToRoutes(itineraries) {
   return itineraries.map((itinerary) => ({
     duration_minutes: Math.round(itinerary.duration / 60),
-    legs: itinerary.legs.map((leg) => {
+    legs: itinerary.legs.map((leg, i, legs) => {
       const shared = {
         mode: normalizeMode(leg.mode),
         from_lat: leg.from.lat,
@@ -84,10 +84,16 @@ export function mapItinerariesToRoutes(itineraries) {
       };
 
       if (leg.mode === "WALK") {
+        // The API returns the stop name, not a composed "Walk to X" sentence,
+        // so the client can phrase it in the rider's language. A trailing walk
+        // leg ends at the rider's own destination rather than a named stop —
+        // OTP labels that vertex "Destination", which is prose we'd be
+        // re-showing untranslated, so signal it with a null name instead.
+        const endsAtDestination = i === legs.length - 1;
         return {
           ...shared,
           duration_minutes: Math.round((leg.endTime - leg.startTime) / 60000),
-          instructions: `Walk to ${formatStopName(leg.to.name)}`,
+          to_stop: endsAtDestination ? null : formatStopName(leg.to.name),
         };
       }
 

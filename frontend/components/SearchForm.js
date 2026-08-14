@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import StopAutocomplete from "./StopAutocomplete";
+import { useI18n } from "./I18nProvider";
 
 function currentTimeValue() {
   const now = new Date();
@@ -9,6 +10,7 @@ function currentTimeValue() {
 }
 
 export default function SearchForm({ onSearch, loading }) {
+  const { t } = useI18n();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [time, setTime] = useState("");
@@ -37,27 +39,27 @@ export default function SearchForm({ onSearch, loading }) {
   return (
     <form className="search-form" onSubmit={handleSubmit}>
       <StopAutocomplete
-        label="From"
+        label={t("search.from")}
         value={from}
         onChange={setFrom}
-        placeholder="Starting point"
+        placeholder={t("search.fromPlaceholder")}
       />
       <button
         type="button"
         className="swap-button"
         onClick={swap}
-        aria-label="Swap from and to"
+        aria-label={t("search.swap")}
       >
-        ⇅
+        <span aria-hidden="true">⇅</span>
       </button>
       <StopAutocomplete
-        label="To"
+        label={t("search.to")}
         value={to}
         onChange={setTo}
-        placeholder="Destination"
+        placeholder={t("search.toPlaceholder")}
       />
       <label className="time-field">
-        Leaving at
+        {t("search.leavingAt")}
         <span className="time-input-row">
           <input
             type="time"
@@ -68,15 +70,16 @@ export default function SearchForm({ onSearch, loading }) {
             <button
               type="button"
               className="now-button"
+              title={t("search.nowHint")}
               onClick={() => setTime(currentTimeValue())}
             >
-              Now
+              {t("search.now")}
             </button>
           )}
         </span>
       </label>
       <button type="submit" className="find-routes-button" disabled={loading}>
-        {loading ? "Finding routes…" : "Find routes"}
+        {loading ? t("search.submitting") : t("search.submit")}
       </button>
     </form>
   );

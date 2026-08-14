@@ -16,13 +16,27 @@ export async function fetchMeta() {
   return res.json();
 }
 
+// Failures carry the API's stable `code` so the UI can render the message in
+// the rider's language; the English `error` string stays on the Error for
+// logs and for codes the dictionaries don't cover.
 export async function findRoutes({ from, to, time }) {
   const params = new URLSearchParams({ from, to });
   if (time) params.set("time", time);
-  const res = await fetch(`${API_BASE_URL}/api/route?${params.toString()}`);
+
+  let res;
+  try {
+    res = await fetch(`${API_BASE_URL}/api/route?${params.toString()}`);
+  } catch (cause) {
+    throw Object.assign(new Error("Could not reach the API", { cause }), {
+      code: "network",
+    });
+  }
+
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || "Route search failed");
+    throw Object.assign(new Error(body.error || "Route search failed"), {
+      code: body.code || "unknown",
+    });
   }
   const data = await res.json();
   return data.routes;

@@ -47,11 +47,15 @@ function toOtpDateTime(timeParam) {
   return { date, time };
 }
 
+// Failures carry a stable `code` alongside the English `error` string: the UI
+// is bilingual, so it translates off the code and only falls back to the
+// server's prose for codes it doesn't recognise.
 router.get("/", async (req, res) => {
   const { from, to, time } = req.query;
 
   if (!from || !to) {
     return res.status(400).json({
+      code: "missing_params",
       error: "Both 'from' and 'to' query parameters are required.",
     });
   }
@@ -63,11 +67,15 @@ router.get("/", async (req, res) => {
       resolveLocation(to.toString()),
     ]);
   } catch (err) {
-    return res.status(502).json({ error: `Geocoding failed: ${err.message}` });
+    return res.status(502).json({
+      code: "geocoding_failed",
+      error: `Geocoding failed: ${err.message}`,
+    });
   }
 
   if (!fromLoc || !toLoc) {
     return res.status(400).json({
+      code: "location_not_found",
       error: "Could not find a location matching 'from' or 'to'. Try a more specific place name or address.",
     });
   }
@@ -85,7 +93,10 @@ router.get("/", async (req, res) => {
 
     res.json({ routes: mapItinerariesToRoutes(itineraries), queried_time: time || null });
   } catch (err) {
-    res.status(502).json({ error: `Routing engine error: ${err.message}` });
+    res.status(502).json({
+      code: "routing_error",
+      error: `Routing engine error: ${err.message}`,
+    });
   }
 });
 

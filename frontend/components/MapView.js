@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { useI18n } from "./I18nProvider";
 
 // Default Leaflet marker icons reference image URLs that break under bundlers;
 // point them at locally hosted copies (public/leaflet/) instead of a CDN.
@@ -46,6 +47,7 @@ function FitToRoute({ points }) {
 }
 
 export default function MapView({ route }) {
+  const { t } = useI18n();
   const legs = route?.legs || [];
   const points = legs.flatMap((leg) => [
     [leg.from_lat, leg.from_lng],
@@ -78,7 +80,8 @@ export default function MapView({ route }) {
         .map((leg, i) => (
           <Marker key={`from-${i}`} position={[leg.from_lat, leg.from_lng]}>
             <Popup>
-              {leg.from_stop} — board {leg.line_name} at {leg.departure_time}
+              {leg.from_stop} —{" "}
+              {t("map.board", { line: leg.line_name, time: leg.departure_time })}
             </Popup>
           </Marker>
         ))}
