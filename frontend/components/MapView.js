@@ -1,6 +1,7 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
+import { useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
@@ -20,6 +21,29 @@ const MODE_COLOR = {
 };
 
 const DEFAULT_CENTER = [13.0827, 80.2707]; // Chennai
+const SINGLE_POINT_ZOOM = 15;
+
+// MapContainer only reads `center`/`zoom` on first render, so without this the
+// map would stay wherever it started — showing a fixed window while long trips
+// ran off the edge, and not moving when the rider picks a different route.
+function FitToRoute({ points }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (points.length === 0) return;
+    const bounds = L.latLngBounds(points);
+    if (bounds.getNorthEast().equals(bounds.getSouthWest())) {
+      map.setView(bounds.getCenter(), SINGLE_POINT_ZOOM);
+    } else {
+      // Padding keeps the endpoints off the edges and clear of the zoom control.
+      map.fitBounds(bounds, { padding: [45, 45], maxZoom: 16 });
+    }
+    // Stringified so this re-runs when the selected route changes, not on
+    // every render (a fresh array identity would loop).
+  }, [map, JSON.stringify(points)]);
+
+  return null;
+}
 
 export default function MapView({ route }) {
   const legs = route?.legs || [];
@@ -27,10 +51,10 @@ export default function MapView({ route }) {
     [leg.from_lat, leg.from_lng],
     [leg.to_lat, leg.to_lng],
   ]);
-  const center = points[0] || DEFAULT_CENTER;
 
   return (
-    <MapContainer center={center} zoom={13} className="map-view">
+    <MapContainer center={DEFAULT_CENTER} zoom={12} className="map-view">
+      <FitToRoute points={points} />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"

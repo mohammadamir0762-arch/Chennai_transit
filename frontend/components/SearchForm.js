@@ -1,12 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import StopAutocomplete from "./StopAutocomplete";
+
+function currentTimeValue() {
+  const now = new Date();
+  return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+}
 
 export default function SearchForm({ onSearch, loading }) {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [time, setTime] = useState("");
+
+  // Most trips are planned standing at the stop right now, so prefill the
+  // current time rather than making the rider set it. Done on mount, not in
+  // useState, because rendering a clock-dependent value on the server would
+  // mismatch the client on hydration.
+  useEffect(() => {
+    setTime(currentTimeValue());
+  }, []);
+
+  const isNow = time === currentTimeValue();
 
   function swap() {
     setFrom(to);
@@ -41,13 +56,24 @@ export default function SearchForm({ onSearch, loading }) {
         onChange={setTo}
         placeholder="Destination"
       />
-      <label>
-        Departure time (optional)
-        <input
-          type="time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-        />
+      <label className="time-field">
+        Leaving at
+        <span className="time-input-row">
+          <input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+          />
+          {!isNow && (
+            <button
+              type="button"
+              className="now-button"
+              onClick={() => setTime(currentTimeValue())}
+            >
+              Now
+            </button>
+          )}
+        </span>
       </label>
       <button type="submit" className="find-routes-button" disabled={loading}>
         {loading ? "Finding routes…" : "Find routes"}
