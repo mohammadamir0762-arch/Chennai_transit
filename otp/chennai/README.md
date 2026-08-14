@@ -1,30 +1,47 @@
 # Chennai launch-city data
 
-Real GTFS data for Chennai's suburban rail network (Chennai Beach, Egmore,
-Tambaram, Chengalpattu, and 43 other real stations), covering the
-`MSB-TBM`, `MSB-CGL`, `TBM-CGL`, and `MSB-VLCY` lines.
+Real GTFS data for Chennai: suburban rail (47 stations) + MTC city buses
+(5,477 stops, 4,611 routes) — buses are the majority of actual ridership,
+per the project's own reasoning for prioritizing them.
 
-- **`chennai-gtfs.zip`** — GTFS feed, built from [justjkk/chennai-rail-gtfs](https://github.com/justjkk/chennai-rail-gtfs) with two corrections (expired calendar dates extended, `route_type` fixed from Tram to Rail). See `build-chennai-data.sh` for exactly what changed and why.
-- **`chennai-streets.osm.pbf`** — street data queried directly from Overpass API for a 400m radius around each station (not a full regional extract — keeps this tiny and fast to rebuild).
-- **`build-chennai-data.sh`** — reproduces both files from source. Run it if the upstream fixtures change or you want to re-verify the data.
+## Files
 
-## What's missing: MTC buses
+- **`chennai-gtfs.zip`** — rail feed (Chennai Suburban Railway + MRTS). Source: [justjkk/chennai-rail-gtfs](https://github.com/justjkk/chennai-rail-gtfs). Reproduce with `build-chennai-data.sh`.
+- **`mtc-bus-gtfs.zip`** — bus feed (MTC). Source: ["Chennai Unified GTFS" by Ithu Ungal Soththu](https://mobilitydatabase.org/feeds/gtfs/mdb-3360), a community civic-data project. Reproduce with `build-mtc-bus-data.sh`.
+- **`chennai-streets.osm.pbf`** — real street network for greater Chennai (808K nodes, 165K ways), shared by both feeds. Reproduce with `build-streets.sh`.
+- **`generate-known-stops.py`** — regenerates `backend/src/data/knownStops.js` from both GTFS feeds (5,524 stops total).
 
-Chennai's city bus network (MTC) — the majority of actual ridership — isn't in here. **Investigated and ruled out one path:** Transitland aggregates a feed for MTC (`f-tf34-metropolitantransportcorporation`), and downloading it just needs a free Transitland API key (`Transitland APIs - Free` plan) — that part works fine. But the archived data itself is corrupted: `routes.txt` has correct-looking real MTC route names, but every one of the 3,543 rows in `stops.txt` is actually in the Bronx, New York (~40.8°N, -73.9°W), and `stop_times.txt` genuinely references those bogus stop IDs — confirmed by cross-checking, not a guess. This has apparently been silently broken in Transitland's archive for years (it was last actually re-fetched from source in 2020, sourced from a GitHub mirror; the underlying schedule dates are from 2016-2017 regardless). Not usable as-is.
+## Data-quality issues found and fixed
 
-**Options for a future attempt:**
-- Check Mobility Database's (mobilitydatabase.org) independent copy of the same feed — different aggregation pipeline, might not share the same corruption. Also needs a free account.
-- Contact MTC/CUMTA directly for current data (per `docs/this-spec.md` section 4.2's fallback plan) — the only path guaranteed to be both current and correct, but the most labor-intensive.
-- Re-check Transitland periodically in case they re-fetch/fix the source.
+Both upstream sources needed real cleanup — worth knowing about before trusting either blindly, and before adding more feeds the same way.
 
-Once real bus data is in hand: no backend or frontend changes are needed — `backend/src/otp/client.js` already handles BUS mode, OTP merges multiple GTFS feeds automatically, and you'll want a wider OSM extract (Geofabrik's India extract, clipped to Chennai metro) rather than the per-station Overpass snippets used for rail, since buses need a real street network between arbitrary stops, not just short walks at stations.
+**Rail feed:** calendar had expired (`end_date` 2020-01-01, extended to 2029-12-31); `route_type` was 0 (Tram) for what are actually heavy rail lines (fixed to 2/Rail). See `build-chennai-data.sh` for details.
 
-## Rebuild the graph after any data change
+**Bus feed** (the upstream "unified" feed bundles MTC buses + CMRL metro): the metro portion is **structurally corrupt**, not just mislabeled — `routes.txt` had route names stuffed into the numeric `route_type` column, and the ~96 metro trip rows had shifted CSV columns (`route_id` containing literal strings like `"weekday"`, non-unique `trip_id`s, dangling foreign keys). Verified by cross-checking `stop_times.txt` against `stops.txt`/`trips.txt`, not just eyeballing — confirmed not salvageable by a field fix, so metro was dropped entirely rather than "fixed." `calendar.txt` also contained an **XSS payload** (`'/><script>alert(1)</script>`) as a literal `service_id`, plus a stray malformed `"test "` row — both dropped. `shapes.txt` was metro-only (no bus trip references a `shape_id`) — dropped.
+
+The **bus portion itself validated clean**: 4,611 routes, 47,047 trips, 0 malformed `stop_times` rows (checked all 1.36M rows), 0 dangling `stop_id` references, 0 duplicate `trip_id`s, coordinates genuinely in the Chennai metro area (12.6–13.5°N, 79.6–80.4°E — not another mislabeled-city situation like the Transitland attempt below). See `build-mtc-bus-data.sh` for the exact cleaning logic.
+
+## A dead end worth recording: Transitland's MTC feed
+
+Before finding the community "unified" feed above, the obvious path — Transitland's aggregated MTC feed (`f-tf34-metropolitantransportcorporation`), free API key required — turned out to be corrupted: `routes.txt` had correct real MTC route names, but every row in `stops.txt`, and the stop IDs `stop_times.txt` actually referenced, were in the Bronx, NY. Confirmed by cross-checking, not a guess. Apparently broken in Transitland's archive since at least 2020 (it was last actually re-fetched from source then; the underlying schedule dates are from 2016-2017 regardless of "last checked" timestamps shown in their UI). Not used.
+
+## Rebuild everything from scratch
 
 ```
+./build-chennai-data.sh      # -> chennai-gtfs.zip
+./build-mtc-bus-data.sh      # -> mtc-bus-gtfs.zip
+./build-streets.sh           # -> chennai-streets.osm.pbf (takes a few minutes)
+python3 generate-known-stops.py   # -> backend/src/data/knownStops.js
+
 cd ../
 rm -rf chennai-graph-dir && mkdir chennai-graph-dir
-cp chennai/chennai-gtfs.zip chennai/chennai-streets.osm.pbf chennai-graph-dir/
-java -Xmx2G -jar otp.jar --build --save chennai-graph-dir
-java -Xmx2G -jar otp.jar --load chennai-graph-dir
+cp chennai/chennai-gtfs.zip chennai/mtc-bus-gtfs.zip chennai/chennai-streets.osm.pbf chennai-graph-dir/
+java -Xmx3G -jar otp.jar --build --save chennai-graph-dir
+java -Xmx3G -jar otp.jar --load chennai-graph-dir
 ```
+
+## What's still missing
+
+- **CMRL metro** — no usable feed found yet (the one bundled in the "unified" feed is corrupt, see above). Chennai Metro isn't huge yet but is growing; worth checking again later or contacting CMRL directly.
+- **Real geocoding** — `backend/src/data/knownStops.js` is a generated stand-in, not Nominatim (`docs/this-spec.md` section 6.1).
+- **Freshness** — the bus feed's actual currency is unverified beyond "the community project's most recent commit"; MTC route numbers/schedules do change. Fine for an MVP, not something to represent as authoritative to end users without a disclaimer.

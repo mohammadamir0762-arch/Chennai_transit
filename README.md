@@ -4,11 +4,11 @@ A free, city-agnostic bus/train route finder built on OpenTripPlanner + GTFS. La
 
 ## Status
 
-Phase 1 (Core MVP), step 4 (partial) done: OTP is doing **real trip planning against real Chennai data** — 47 actual suburban rail stations (Chennai Beach, Egmore, Tambaram, Chengalpattu, ...) with real schedules (see `otp/chennai/README.md`). The full pipeline — search → OTP query → results → map — works end to end against this real data, verified in a browser.
+Phase 1 (Core MVP), step 4 done: OTP is doing **real trip planning against real Chennai data** — suburban rail (47 stations) *and* MTC city buses (5,477 stops, 4,611 routes, real transfers between bus lines) — see `otp/chennai/README.md`. The full pipeline — search → OTP query → results → map — works end to end against this real data, verified in a browser, including multi-leg bus transfers.
 
 Not done yet:
-- **MTC city buses** — the majority of Chennai's actual transit ridership. Transitland's archived feed turned out to be corrupted (real route names, but stop data from the Bronx, NY) — ruled out, not just blocked on a key. See `otp/chennai/README.md` for what to try next.
-- **Real geocoding** — `from`/`to` currently resolve against a hardcoded stop list (`backend/src/data/knownStops.js`), not Nominatim.
+- **CMRL metro** — no usable feed found yet. The obvious sources (Transitland's archive, and the metro portion of the community bus feed) were both investigated and found corrupted, not just missing — see `otp/chennai/README.md` for what was tried.
+- **Real geocoding** — `from`/`to` currently resolve against a generated stop list (`backend/src/data/knownStops.js`, built from the GTFS feeds), not Nominatim.
 - **Deployment** — everything still runs locally only.
 
 ## Repo layout
@@ -23,7 +23,7 @@ Not done yet:
 
 ```
 # 1. OTP (see otp/README.md for one-time setup: download otp.jar, build the graph)
-cd otp && java -Xmx2G -jar otp.jar --load chennai-graph-dir   # http://localhost:8080
+cd otp && java -Xmx3G -jar otp.jar --load chennai-graph-dir   # http://localhost:8080
 
 # 2. backend
 cd backend && npm install && npm run dev   # http://localhost:4000

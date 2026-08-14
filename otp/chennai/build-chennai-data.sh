@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Reproduces chennai-gtfs.zip and chennai-streets.osm.pbf from source.
-# Requires: python3, osmium-tool (`brew install osmium-tool`).
+# Reproduces chennai-gtfs.zip (the rail feed) from source. For street data,
+# see build-streets.sh — it's shared with the bus feed, not regenerated here.
+# Requires: python3.
 #
 # GTFS source: github.com/justjkk/chennai-rail-gtfs (community-maintained,
 # covers Chennai Suburban Railway + MRTS — real stations, real schedules).
@@ -13,11 +14,6 @@
 #      instead of TRAM (the backend maps RAIL -> TRAIN for display either way).
 # Metro (CMR) entries in the upstream routes.txt were dropped: they're
 # planned/under-construction lines with no actual trip data.
-#
-# Street data: queried directly from the Overpass API for a 400m radius
-# around each of the 47 real stations (not a full regional OSM extract) —
-# enough for OTP to link stops to walkable streets without a slow
-# multi-hundred-MB Tamil Nadu-wide download.
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -57,27 +53,4 @@ echo "Packaging chennai-gtfs.zip..."
 rm -f chennai-gtfs.zip
 (cd "$WORK_DIR" && zip -j - agency.txt stops.txt routes.txt calendar.txt trips.txt stop_times.txt) > chennai-gtfs.zip
 
-echo "Querying Overpass API for streets around each station..."
-python3 <<PYEOF
-import csv
-with open("$WORK_DIR/stops.txt") as f:
-    rows = list(csv.DictReader(f))
-lines = ["[out:xml][timeout:180];", "("]
-for r in rows:
-    lines.append(f'  way["highway"](around:400,{r["stop_lat"]},{r["stop_lon"]});')
-lines.append(");")
-lines.append("(._;>;);")
-lines.append("out;")
-with open("$WORK_DIR/overpass_query.txt", "w") as f:
-    f.write("\n".join(lines))
-print(f"generated query for {len(rows)} stations")
-PYEOF
-
-curl -sL --retry 3 --connect-timeout 15 --max-time 200 \
-  -X POST -d "@$WORK_DIR/overpass_query.txt" \
-  "https://overpass-api.de/api/interpreter" -o "$WORK_DIR/chennai-streets.osm.xml"
-
-echo "Converting to PBF..."
-osmium cat "$WORK_DIR/chennai-streets.osm.xml" -o chennai-streets.osm.pbf --overwrite
-
-echo "Done: chennai-gtfs.zip and chennai-streets.osm.pbf"
+echo "Done: chennai-gtfs.zip"

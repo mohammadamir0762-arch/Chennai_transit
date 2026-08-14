@@ -14,20 +14,22 @@
 
 ## Data sets
 
-- **`chennai/`** — real data for the launch city: Chennai suburban rail (47 real stations, real schedules). This is what `backend/src/data/knownStops.js` currently points at. See `chennai/README.md` for sourcing details and what's still missing (MTC buses).
+- **`chennai/`** — real data for the launch city: Chennai suburban rail (47 stations) + MTC city buses (5,477 stops, 4,611 routes), 5,524 stops total. This is what `backend/src/data/knownStops.js` is generated from. See `chennai/README.md` for sourcing details, data-quality fixes applied, and what's still missing (CMRL metro).
 - **`data/`** — a tiny synthetic-but-valid fixture (4 fake stops, one fake bus route) used to validate the OTP pipeline itself before any real city data existed. Not used by the backend anymore, kept for quick sanity-checking OTP setup independent of real data. Regenerate with `python3 data/generate-sample-gtfs.py`.
 
 ## Build and run (Chennai)
 
 ```
 mkdir -p chennai-graph-dir
-cp chennai/chennai-gtfs.zip chennai/chennai-streets.osm.pbf chennai-graph-dir/
-java -Xmx2G -jar otp.jar --build --save chennai-graph-dir
-java -Xmx2G -jar otp.jar --load chennai-graph-dir
+cp chennai/chennai-gtfs.zip chennai/mtc-bus-gtfs.zip chennai/chennai-streets.osm.pbf chennai-graph-dir/
+java -Xmx3G -jar otp.jar --build --save chennai-graph-dir
+java -Xmx3G -jar otp.jar --load chennai-graph-dir
 ```
+
+OTP merges multiple GTFS feeds in the same build directory automatically — no config needed to combine rail + bus. Needs `-Xmx3G` now (not `-Xmx2G`) since the bus feed is much larger: 47K trips, 1.36M stop_times rows.
 
 OTP serves its GraphQL API at `http://localhost:8080/otp/routers/default/index/graphql` (the legacy REST `/plan` endpoint from older OTP versions has been removed — use GraphQL). The backend's `src/otp/client.js` queries this.
 
-## Next step: MTC buses + real geocoding
+## Next step: real geocoding
 
-See `chennai/README.md` for how to add Chennai's bus network (needs a free Transitland API key). Once real GTFS data is in place, `backend/src/data/knownStops.js`'s role as a geocoding stand-in should be replaced with real geocoding (Nominatim, per `docs/this-spec.md` section 6.1).
+Bus + rail are both in now. What's left: replace `backend/src/data/knownStops.js`'s role as a geocoding stand-in with real geocoding (Nominatim, per `docs/this-spec.md` section 6.1), and revisit CMRL metro coverage (see `chennai/README.md`).
