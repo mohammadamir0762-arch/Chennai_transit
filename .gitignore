@@ -10,6 +10,7 @@ build/
 # OTP build artifacts (otp.jar is ~175MB, download per otp/README.md)
 otp/otp.jar
 otp/graph-dir/
+otp/chennai-graph-dir/
 
 # GTFS working data (large, sourced separately)
 gtfs-pipeline/data/

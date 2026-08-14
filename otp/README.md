@@ -12,26 +12,22 @@
   osmium cat data/streets.osm.xml -o data/streets.osm.pbf
   ```
 
-## Sample data (for testing the pipeline before real GTFS is sourced)
+## Data sets
 
-`data/streets.osm.xml` and `data/generate-sample-gtfs.py` produce a tiny synthetic-but-valid feed: 4 stops ~7km apart (Bengaluru-area coordinates), one bus route (`42A`), running every 30 minutes. The stops/coordinates match `backend/src/data/knownStops.js`, so the whole search → route → map pipeline works against this data without needing a real launch city yet.
+- **`chennai/`** — real data for the launch city: Chennai suburban rail (47 real stations, real schedules). This is what `backend/src/data/knownStops.js` currently points at. See `chennai/README.md` for sourcing details and what's still missing (MTC buses).
+- **`data/`** — a tiny synthetic-but-valid fixture (4 fake stops, one fake bus route) used to validate the OTP pipeline itself before any real city data existed. Not used by the backend anymore, kept for quick sanity-checking OTP setup independent of real data. Regenerate with `python3 data/generate-sample-gtfs.py`.
 
-Regenerate the sample GTFS if you change it:
-```
-python3 data/generate-sample-gtfs.py
-```
-
-## Build and run
+## Build and run (Chennai)
 
 ```
-mkdir -p graph-dir
-cp data/sample-gtfs.zip data/streets.osm.pbf graph-dir/
-java -Xmx2G -jar otp.jar --build --save graph-dir
-java -Xmx2G -jar otp.jar --load graph-dir
+mkdir -p chennai-graph-dir
+cp chennai/chennai-gtfs.zip chennai/chennai-streets.osm.pbf chennai-graph-dir/
+java -Xmx2G -jar otp.jar --build --save chennai-graph-dir
+java -Xmx2G -jar otp.jar --load chennai-graph-dir
 ```
 
 OTP serves its GraphQL API at `http://localhost:8080/otp/routers/default/index/graphql` (the legacy REST `/plan` endpoint from older OTP versions has been removed — use GraphQL). The backend's `src/otp/client.js` queries this.
 
-## Next step: real launch-city data
+## Next step: MTC buses + real geocoding
 
-Replace `data/sample-gtfs.zip` and the OSM extract with real data per `docs/this-spec.md` section 4.2 (source GTFS from transitland.org / mobilitydatabase.org, or hand-build it) and a real Geofabrik OSM extract for the launch city, then rebuild the graph. No backend or frontend code changes should be needed — only `backend/src/data/knownStops.js`'s role as a geocoding stand-in will need to be replaced with real geocoding (Nominatim, per spec section 6.1).
+See `chennai/README.md` for how to add Chennai's bus network (needs a free Transitland API key). Once real GTFS data is in place, `backend/src/data/knownStops.js`'s role as a geocoding stand-in should be replaced with real geocoding (Nominatim, per `docs/this-spec.md` section 6.1).

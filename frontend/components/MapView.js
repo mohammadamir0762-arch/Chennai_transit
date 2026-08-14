@@ -19,7 +19,7 @@ const MODE_COLOR = {
   TRAIN: "#c0392b",
 };
 
-const DEFAULT_CENTER = [12.9716, 77.5946];
+const DEFAULT_CENTER = [13.0827, 80.2707]; // Chennai
 
 export default function MapView({ route }) {
   const legs = route?.legs || [];

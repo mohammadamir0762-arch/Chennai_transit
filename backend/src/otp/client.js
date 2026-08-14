@@ -47,6 +47,14 @@ export async function planTrip({ fromLat, fromLon, toLat, toLon, date, time }) {
   return body.data.plan.itineraries;
 }
 
+// The frontend only styles WALK/BUS/TRAIN; fold OTP's finer-grained GTFS
+// route-type modes (rail, subway, tram, funicular, ...) into TRAIN.
+const TRAIN_MODES = new Set(["RAIL", "SUBWAY", "TRAM", "FUNICULAR", "GONDOLA", "CABLE_CAR"]);
+
+function normalizeMode(mode) {
+  return TRAIN_MODES.has(mode) ? "TRAIN" : mode;
+}
+
 function formatClockTime(epochMs) {
   return new Intl.DateTimeFormat("en-GB", {
     hour: "2-digit",
@@ -61,7 +69,7 @@ export function mapItinerariesToRoutes(itineraries) {
     duration_minutes: Math.round(itinerary.duration / 60),
     legs: itinerary.legs.map((leg) => {
       const shared = {
-        mode: leg.mode,
+        mode: normalizeMode(leg.mode),
         from_lat: leg.from.lat,
         from_lng: leg.from.lon,
         to_lat: leg.to.lat,
