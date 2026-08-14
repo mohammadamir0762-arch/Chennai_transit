@@ -4,12 +4,12 @@ A free, city-agnostic bus/train route finder built on OpenTripPlanner + GTFS. La
 
 ## Status
 
-Phase 1 (Core MVP), step 4 done: OTP is doing **real trip planning against real Chennai data** — suburban rail (47 stations) *and* MTC city buses (5,477 stops, 4,611 routes, real transfers between bus lines) — see `otp/chennai/README.md`. The full pipeline — search → OTP query → results → map — works end to end against this real data, verified in a browser, including multi-leg bus transfers.
+Phase 1 (Core MVP) is functionally complete for the launch city: OTP does **real trip planning against real Chennai data** — suburban rail (47 stations) *and* MTC city buses (5,477 stops, 4,611 routes, real transfers between bus lines) — see `otp/chennai/README.md`. **Real geocoding via Nominatim** is wired in too (`backend/src/geocoding/nominatim.js`), so users can type any address or landmark ("Marina Beach, Chennai"), not just exact stop names — verified end to end in a browser. The full pipeline — free-text search → geocode/known-stop lookup → OTP query → results → map — works against real data throughout.
 
 Not done yet:
 - **CMRL metro** — no usable feed found yet. The obvious sources (Transitland's archive, and the metro portion of the community bus feed) were both investigated and found corrupted, not just missing — see `otp/chennai/README.md` for what was tried.
-- **Real geocoding** — `from`/`to` currently resolve against a generated stop list (`backend/src/data/knownStops.js`, built from the GTFS feeds), not Nominatim.
 - **Deployment** — everything still runs locally only.
+- **Self-hosted Nominatim** — currently uses the public `nominatim.openstreetmap.org` instance, which is fine for development but has strict usage limits (1 req/sec, no bulk use) unsuitable for real production traffic — self-hosting is the documented next step once traffic justifies it (`docs/this-spec.md` section 6.1).
 
 ## Repo layout
 

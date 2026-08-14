@@ -1,18 +1,28 @@
 import { Router } from "express";
 import { findStopByName } from "../data/knownStops.js";
 import { planTrip, mapItinerariesToRoutes } from "../otp/client.js";
+import { geocode } from "../geocoding/nominatim.js";
 
 const router = Router();
 
 const COORD_PATTERN = /^(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)$/;
 
-function resolveLocation(value) {
+// Tries, in order: raw "lat,lng", an exact/known transit stop name (fast,
+// no network call), then falls back to real geocoding via Nominatim for
+// arbitrary place names/addresses.
+async function resolveLocation(value) {
   const coordMatch = value.match(COORD_PATTERN);
   if (coordMatch) {
     return { lat: parseFloat(coordMatch[1]), lon: parseFloat(coordMatch[2]) };
   }
+
   const stop = findStopByName(value);
-  return stop ? { lat: stop.lat, lon: stop.lng } : null;
+  if (stop) {
+    return { lat: stop.lat, lon: stop.lng };
+  }
+
+  const geocoded = await geocode(value);
+  return geocoded ? { lat: geocoded.lat, lon: geocoded.lon } : null;
 }
 
 // OTP's GraphQL `plan` query wants separate date ("YYYY-MM-DD") and
@@ -46,13 +56,19 @@ router.get("/", async (req, res) => {
     });
   }
 
-  const fromLoc = resolveLocation(from.toString());
-  const toLoc = resolveLocation(to.toString());
+  let fromLoc, toLoc;
+  try {
+    [fromLoc, toLoc] = await Promise.all([
+      resolveLocation(from.toString()),
+      resolveLocation(to.toString()),
+    ]);
+  } catch (err) {
+    return res.status(502).json({ error: `Geocoding failed: ${err.message}` });
+  }
 
   if (!fromLoc || !toLoc) {
     return res.status(400).json({
-      error:
-        "Could not resolve 'from' or 'to' to a known stop. Real geocoding (Nominatim) isn't wired up yet — pick a stop from the autocomplete suggestions.",
+      error: "Could not find a location matching 'from' or 'to'. Try a more specific place name or address.",
     });
   }
 
