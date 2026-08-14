@@ -7,10 +7,9 @@ build/
 .env.local
 .DS_Store
 
-# OTP build artifacts
+# OTP build artifacts (otp.jar is ~175MB, download per otp/README.md)
+otp/otp.jar
 otp/graph-dir/
-otp/*.pbf
-otp/*.zip
 
 # GTFS working data (large, sourced separately)
 gtfs-pipeline/data/

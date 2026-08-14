@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { mockStops } from "../data/mockStops.js";
+import { knownStops } from "../data/knownStops.js";
 
 const router = Router();
 
@@ -10,7 +10,7 @@ router.get("/search", (req, res) => {
     return res.json({ stops: [] });
   }
 
-  const matches = mockStops.filter((stop) =>
+  const matches = knownStops.filter((stop) =>
     stop.name.toLowerCase().includes(q)
   );
 

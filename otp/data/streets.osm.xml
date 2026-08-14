@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version="0.6" generator="manual-sample-data">
+  <bounds minlat="12.9700" minlon="77.5930" maxlat="13.0170" maxlon="77.6470"/>
+  <node id="1" lat="12.9716" lon="77.5946" version="1"/>
+  <node id="2" lat="12.9850" lon="77.6050" version="1"/>
+  <node id="3" lat="13.0000" lon="77.6200" version="1"/>
+  <node id="4" lat="13.0150" lon="77.6450" version="1"/>
+  <way id="100" version="1">
+    <nd ref="1"/>
+    <nd ref="2"/>
+    <nd ref="3"/>
+    <nd ref="4"/>
+    <tag k="highway" v="primary"/>
+    <tag k="name" v="Test Main Road"/>
+    <tag k="oneway" v="no"/>
+  </way>
+</osm>
