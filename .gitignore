@@ -1,0 +1,16 @@
+node_modules/
+.next/
+dist/
+build/
+*.log
+.env
+.env.local
+.DS_Store
+
+# OTP build artifacts
+otp/graph-dir/
+otp/*.pbf
+otp/*.zip
+
+# GTFS working data (large, sourced separately)
+gtfs-pipeline/data/
