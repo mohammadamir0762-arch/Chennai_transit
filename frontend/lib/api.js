@@ -10,6 +10,12 @@ export async function searchStops(query) {
   return data.stops;
 }
 
+export async function fetchMeta() {
+  const res = await fetch(`${API_BASE_URL}/api/meta`);
+  if (!res.ok) throw new Error("Could not load data info");
+  return res.json();
+}
+
 export async function findRoutes({ from, to, time }) {
   const params = new URLSearchParams({ from, to });
   if (time) params.set("time", time);

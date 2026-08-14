@@ -4,6 +4,7 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import SearchForm from "../components/SearchForm";
 import ResultsList from "../components/ResultsList";
+import DataNotice from "../components/DataNotice";
 import { findRoutes } from "../lib/api";
 
 // Leaflet touches `window`, so the map must never render on the server.
@@ -60,6 +61,8 @@ export default function Home() {
           )}
         </div>
       </div>
+
+      <DataNotice />
     </main>
   );
 }

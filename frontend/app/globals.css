@@ -215,6 +215,27 @@ h1 {
   overflow: hidden;
 }
 
+.data-notice {
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+
+.data-notice p {
+  margin: 0 0 6px;
+}
+
+.data-notice strong {
+  color: var(--color-text);
+}
+
+.data-notice a {
+  color: var(--color-accent);
+}
+
 .map-placeholder,
 .map-loading {
   width: 100%;

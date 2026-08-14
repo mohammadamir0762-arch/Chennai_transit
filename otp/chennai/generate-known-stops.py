@@ -9,6 +9,7 @@ import csv
 import io
 import json
 import zipfile
+from datetime import date
 from pathlib import Path
 
 HERE = Path(__file__).parent
@@ -50,9 +51,13 @@ def main():
     lines = [
         "// Real Chennai stops (rail + MTC bus), generated from the GTFS feeds",
         "// in otp/chennai/ by otp/chennai/generate-known-stops.py — do not edit",
-        "// by hand, regenerate instead. Doubles as a stand-in for geocoding",
-        "// until Nominatim is wired up (see docs/this-spec.md section 6.1) —",
-        '// /api/route resolves free-text "from"/"to" against this list.',
+        "// by hand, regenerate instead. Backs /api/stops/search, and gives",
+        '// /api/route a fast exact-match path before it falls back to geocoding.',
+        "",
+        "// When the underlying GTFS feeds were last rebuilt from upstream. Surfaced",
+        "// in the UI so riders can judge how current the schedule data is.",
+        f'export const dataGeneratedAt = "{date.today().isoformat()}";',
+        "",
         "export const knownStops = [",
     ]
     for s in stops:

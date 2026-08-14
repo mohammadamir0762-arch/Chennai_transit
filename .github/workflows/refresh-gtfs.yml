@@ -1,0 +1,70 @@
+name: Refresh GTFS data
+
+# MTC route numbers, stop names, and schedules change over time, and the
+# upstream ChennaiGTFS project regenerates its feed weekly. Without this,
+# the committed feed silently goes stale and riders get wrong directions.
+#
+# Opens a PR rather than pushing to main: the build script's validation
+# catches structurally broken upstream data, but it can't catch a plausible-
+# looking-but-wrong update. A human should glance at the diff before riders
+# see it.
+on:
+  schedule:
+    - cron: "0 2 * * 1" # Mondays 02:00 UTC, after upstream's weekly update
+  workflow_dispatch: # allow manual runs
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Rebuild GTFS feeds
+        run: |
+          cd otp/chennai
+          ./build-chennai-data.sh
+          ./build-mtc-bus-data.sh
+
+      - name: Regenerate known stops
+        run: python3 otp/chennai/generate-known-stops.py
+
+      - name: Summarize changes
+        id: summary
+        run: |
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No upstream changes."
+            exit 0
+          fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          {
+            echo 'body<<BODY_EOF'
+            echo "Automated weekly refresh of Chennai GTFS data from upstream."
+            echo
+            echo "The build scripts' validation (route/trip/stop counts, all stop"
+            echo "coordinates within the Chennai area) passed. Review the stop and"
+            echo "route diffs below before merging — validation catches structurally"
+            echo "broken data, not plausible-but-wrong data."
+            echo
+            echo '```'
+            git diff --stat
+            echo '```'
+            echo 'BODY_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Open pull request
+        if: steps.summary.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: automated/gtfs-refresh
+          title: "Refresh Chennai GTFS data"
+          body: ${{ steps.summary.outputs.body }}
+          commit-message: "Refresh Chennai GTFS data from upstream"
+          delete-branch: true

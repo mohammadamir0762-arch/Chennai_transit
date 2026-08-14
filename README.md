@@ -6,8 +6,11 @@ A free, city-agnostic bus/train route finder built on OpenTripPlanner + GTFS. La
 
 Phase 1 (Core MVP) is functionally complete for the launch city: OTP does **real trip planning against real Chennai data** — suburban rail (47 stations) *and* MTC city buses (5,477 stops, 4,611 routes, real transfers between bus lines) — see `otp/chennai/README.md`. **Real geocoding via Nominatim** is wired in too (`backend/src/geocoding/nominatim.js`), so users can type any address or landmark ("Marina Beach, Chennai"), not just exact stop names — verified end to end in a browser. The full pipeline — free-text search → geocode/known-stop lookup → OTP query → results → map — works against real data throughout.
 
+Schedule data is refreshed automatically: `.github/workflows/refresh-gtfs.yml` re-runs the build scripts weekly and opens a PR when upstream changes, so route/stop updates don't silently go stale. The UI tells riders plainly that times are **scheduled, not live**, and when the data was last updated.
+
 Not done yet:
-- **CMRL metro** — no usable feed found yet. The obvious sources (Transitland's archive, and the metro portion of the community bus feed) were both investigated and found corrupted, not just missing — see `otp/chennai/README.md` for what was tried.
+- **CMRL metro** — still excluded. Upstream's separate metro feed is structurally valid but a stub (4 of 44 stations have schedule data; claims ~3h for a ~1h trip), so including it would misroute people. Details in `otp/chennai/README.md`.
+- **Real-time arrivals** — MTC publishes no public API or GTFS-Realtime feed, so the app is schedule-based only. See `otp/chennai/README.md`.
 - **Deployment** — everything still runs locally only.
 - **Self-hosted Nominatim** — currently uses the public `nominatim.openstreetmap.org` instance, which is fine for development but has strict usage limits (1 req/sec, no bulk use) unsuitable for real production traffic — self-hosting is the documented next step once traffic justifies it (`docs/this-spec.md` section 6.1).
 

@@ -17,6 +17,7 @@ Copy `.env.local.example` to `.env.local` and set `NOMINATIM_CONTACT` to a real,
 
 - `GET /api/route?from=<place>&to=<place>&time=<optional HH:MM>` — real trip planning via OTP
 - `GET /api/stops/search?q=<text>` — stop-name autocomplete (known stops only, see below)
+- `GET /api/meta` — data provenance: when the GTFS feeds were last rebuilt, whether real-time data is in use (it isn't), and source attributions. Drives the rider-facing notice in the UI.
 - `GET /api/health` — uptime check
 
 ## Location resolution (`from`/`to`)
