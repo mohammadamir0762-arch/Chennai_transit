@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { findStopByName } from "../data/knownStops.js";
+import { findStopByName } from "../data/stopSearch.js";
 import { planTrip, mapItinerariesToRoutes } from "../otp/client.js";
 import { geocode } from "../geocoding/nominatim.js";
 

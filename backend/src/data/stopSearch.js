@@ -1,6 +1,15 @@
 import { knownStops } from "./knownStops.js";
+import { formatStopName } from "./stopNames.js";
 
 const MAX_RESULTS = 8;
+
+// Display-formatted once at import. Everything downstream — autocomplete
+// results, and the names /api/route matches against — uses these, so what a
+// rider picks from the dropdown is exactly what resolves to a location.
+export const stops = knownStops.map((stop) => ({
+  ...stop,
+  name: formatStopName(stop.name),
+}));
 
 // Rank tiers, best first. Riders type partial and abbreviated names
 // ("tnagar" for Thiyagarayanagar), so plain substring matching isn't enough —
@@ -73,7 +82,7 @@ function scoreStop(entry, query, queryTokens) {
 
 // Precomputed once at import rather than per keystroke — this runs over 5,500
 // stops on every autocomplete request.
-const searchIndex = knownStops.map((stop) => {
+const searchIndex = stops.map((stop) => {
   const normalizedName = normalize(stop.name);
   return {
     stop,
@@ -82,6 +91,18 @@ const searchIndex = knownStops.map((stop) => {
     compactName: normalizedName.replace(/\s/g, ""),
   };
 });
+
+// Exact-ish lookup for /api/route, before it falls back to geocoding. Matches
+// on the normalized form so a name copied from the dropdown resolves even if
+// punctuation or spacing differs.
+export function findStopByName(rawQuery) {
+  const query = normalize(rawQuery);
+  if (!query) return null;
+  const exact = searchIndex.find((e) => e.normalizedName === query);
+  if (exact) return exact.stop;
+  const contains = searchIndex.find((e) => e.normalizedName.includes(query));
+  return contains ? contains.stop : null;
+}
 
 export function searchStops(rawQuery) {
   const query = normalize(rawQuery);

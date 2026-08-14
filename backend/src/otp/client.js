@@ -1,3 +1,5 @@
+import { formatStopName } from "../data/stopNames.js";
+
 const OTP_BASE_URL = process.env.OTP_BASE_URL || "http://localhost:8080";
 const TIMEZONE = process.env.GTFS_TIMEZONE || "Asia/Kolkata";
 
@@ -55,13 +57,18 @@ function normalizeMode(mode) {
   return TRAIN_MODES.has(mode) ? "TRAIN" : mode;
 }
 
+// 12-hour, matching how times are read in Chennai. Formatted server-side in
+// the agency's timezone rather than the client's, so someone planning a trip
+// from a different timezone still sees local Chennai times.
 function formatClockTime(epochMs) {
-  return new Intl.DateTimeFormat("en-GB", {
-    hour: "2-digit",
+  return new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
     minute: "2-digit",
-    hour12: false,
+    hour12: true,
     timeZone: TIMEZONE,
-  }).format(new Date(epochMs));
+  })
+    .format(new Date(epochMs))
+    .replace(/ /g, " "); // Intl emits a narrow no-break space before AM/PM
 }
 
 export function mapItinerariesToRoutes(itineraries) {
@@ -80,17 +87,21 @@ export function mapItinerariesToRoutes(itineraries) {
         return {
           ...shared,
           duration_minutes: Math.round((leg.endTime - leg.startTime) / 60000),
-          instructions: `Walk to ${leg.to.name}`,
+          instructions: `Walk to ${formatStopName(leg.to.name)}`,
         };
       }
 
       return {
         ...shared,
         line_name: leg.route?.shortName || leg.mode,
-        from_stop: leg.from.name,
-        to_stop: leg.to.name,
+        from_stop: formatStopName(leg.from.name),
+        to_stop: formatStopName(leg.to.name),
         departure_time: formatClockTime(leg.startTime),
         arrival_time: formatClockTime(leg.endTime),
+        // Raw epochs alongside the display strings so the client can do
+        // arithmetic (transfer wait times) without re-parsing "7:10 PM".
+        departure_epoch: leg.startTime,
+        arrival_epoch: leg.endTime,
       };
     }),
   }));

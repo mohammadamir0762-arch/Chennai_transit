@@ -1,7 +1,7 @@
 // Real Chennai stops (rail + MTC bus), generated from the GTFS feeds
 // in otp/chennai/ by otp/chennai/generate-known-stops.py — do not edit
-// by hand, regenerate instead. Backs /api/stops/search, and gives
-// /api/route a fast exact-match path before it falls back to geocoding.
+// by hand, regenerate instead. Raw feed data: lookup and display
+// formatting live in ../data/stopSearch.js and ../data/stopNames.js.
 
 // When the underlying GTFS feeds were last rebuilt from upstream. Surfaced
 // in the UI so riders can judge how current the schedule data is.
@@ -5533,11 +5533,3 @@ export const knownStops = [
   { id: "6449", name: "Zion School", lat: 12.88404, lng: 80.13563 },
   { id: "11130", name: "greams road", lat: 13.05698, lng: 80.25499 },
 ];
-
-export function findStopByName(query) {
-  const q = query.trim().toLowerCase();
-  return (
-    knownStops.find((s) => s.name.toLowerCase() === q) ||
-    knownStops.find((s) => s.name.toLowerCase().includes(q))
-  );
-}

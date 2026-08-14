@@ -51,8 +51,8 @@ def main():
     lines = [
         "// Real Chennai stops (rail + MTC bus), generated from the GTFS feeds",
         "// in otp/chennai/ by otp/chennai/generate-known-stops.py — do not edit",
-        "// by hand, regenerate instead. Backs /api/stops/search, and gives",
-        '// /api/route a fast exact-match path before it falls back to geocoding.',
+        "// by hand, regenerate instead. Raw feed data: lookup and display",
+        "// formatting live in ../data/stopSearch.js and ../data/stopNames.js.",
         "",
         "// When the underlying GTFS feeds were last rebuilt from upstream. Surfaced",
         "// in the UI so riders can judge how current the schedule data is.",
@@ -64,14 +64,6 @@ def main():
         name = json.dumps(s["name"])
         lines.append(f'  {{ id: {json.dumps(s["id"])}, name: {name}, lat: {s["lat"]}, lng: {s["lng"]} }},')
     lines.append("];")
-    lines.append("")
-    lines.append("export function findStopByName(query) {")
-    lines.append("  const q = query.trim().toLowerCase();")
-    lines.append("  return (")
-    lines.append("    knownStops.find((s) => s.name.toLowerCase() === q) ||")
-    lines.append("    knownStops.find((s) => s.name.toLowerCase().includes(q))")
-    lines.append("  );")
-    lines.append("}")
     lines.append("")
 
     OUT_PATH.write_text("\n".join(lines))
