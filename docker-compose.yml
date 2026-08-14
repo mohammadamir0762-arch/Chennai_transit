@@ -1,0 +1,48 @@
+# Three services on one VM (see docs/deploy.md for the full runbook):
+#   otp      — routing engine, internal only, never exposed to the internet
+#   backend  — Express API, internal only, reverse-proxied by caddy
+#   caddy    — the only public-facing service; gets a real HTTPS cert
+#              automatically for DUCKDNS_DOMAIN via Let's Encrypt
+#
+# Needs a .env file next to this one (copy .env.example) with
+# DUCKDNS_DOMAIN, NOMINATIM_CONTACT, and FRONTEND_ORIGIN filled in.
+
+services:
+  otp:
+    build: ./otp
+    restart: unless-stopped
+    expose:
+      - "8080"
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      otp:
+        condition: service_healthy
+    environment:
+      PORT: 4000
+      OTP_BASE_URL: http://otp:8080
+      NOMINATIM_CONTACT: ${NOMINATIM_CONTACT}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}
+    expose:
+      - "4000"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DUCKDNS_DOMAIN: ${DUCKDNS_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

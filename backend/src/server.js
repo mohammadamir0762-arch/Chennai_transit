@@ -8,7 +8,10 @@ import metaRouter from "./routes/meta.js";
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(cors());
+// Wide open in dev (no FRONTEND_ORIGIN set); locked to the deployed
+// frontend's origin in production so the API isn't a free-for-all proxy.
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN;
+app.use(cors(FRONTEND_ORIGIN ? { origin: FRONTEND_ORIGIN } : undefined));
 app.use(express.json());
 
 app.use("/api/route", routeRouter);
