@@ -7,7 +7,7 @@ A free, city-agnostic bus/train route finder built on OpenTripPlanner + GTFS. La
 Phase 1 (Core MVP), step 4 (partial) done: OTP is doing **real trip planning against real Chennai data** — 47 actual suburban rail stations (Chennai Beach, Egmore, Tambaram, Chengalpattu, ...) with real schedules (see `otp/chennai/README.md`). The full pipeline — search → OTP query → results → map — works end to end against this real data, verified in a browser.
 
 Not done yet:
-- **MTC city buses** — the majority of Chennai's actual transit ridership. Feed exists (Transitland, auto-updated) but needs a free API key to fetch; see `otp/chennai/README.md`.
+- **MTC city buses** — the majority of Chennai's actual transit ridership. Transitland's archived feed turned out to be corrupted (real route names, but stop data from the Bronx, NY) — ruled out, not just blocked on a key. See `otp/chennai/README.md` for what to try next.
 - **Real geocoding** — `from`/`to` currently resolve against a hardcoded stop list (`backend/src/data/knownStops.js`), not Nominatim.
 - **Deployment** — everything still runs locally only.
 

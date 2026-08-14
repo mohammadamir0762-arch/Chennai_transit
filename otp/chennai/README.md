@@ -10,18 +10,14 @@ Tambaram, Chengalpattu, and 43 other real stations), covering the
 
 ## What's missing: MTC buses
 
-Chennai's city bus network (MTC) — the majority of actual ridership — isn't in here yet. It has an **active** feed aggregated by [Transitland](https://www.transit.land/feeds/f-tf34-metropolitantransportcorporation) (auto-refreshed regularly), but downloading it requires a free Transitland API key:
+Chennai's city bus network (MTC) — the majority of actual ridership — isn't in here. **Investigated and ruled out one path:** Transitland aggregates a feed for MTC (`f-tf34-metropolitantransportcorporation`), and downloading it just needs a free Transitland API key (`Transitland APIs - Free` plan) — that part works fine. But the archived data itself is corrupted: `routes.txt` has correct-looking real MTC route names, but every one of the 3,543 rows in `stops.txt` is actually in the Bronx, New York (~40.8°N, -73.9°W), and `stop_times.txt` genuinely references those bogus stop IDs — confirmed by cross-checking, not a guess. This has apparently been silently broken in Transitland's archive for years (it was last actually re-fetched from source in 2020, sourced from a GitHub mirror; the underlying schedule dates are from 2016-2017 regardless). Not usable as-is.
 
-1. Sign up at [transit.land](https://www.transit.land) (free tier).
-2. Get an API key from your account settings.
-3. Download the feed:
-   ```
-   curl -H "apikey: YOUR_KEY" "https://transit.land/api/v2/rest/feeds/f-tf34-metropolitantransportcorporation/download_latest_feed_version" -o mtc-chennai-gtfs.zip
-   ```
-4. Add it alongside `chennai-gtfs.zip` in the OTP build directory (OTP merges multiple GTFS feeds automatically) and rebuild the graph.
-5. You'll likely also want a wider OSM extract at that point (Geofabrik's India extract, clipped to Chennai metro) rather than the per-station Overpass snippets used for rail, since buses need a real street network for routing between arbitrary stops, not just short walks at stations.
+**Options for a future attempt:**
+- Check Mobility Database's (mobilitydatabase.org) independent copy of the same feed — different aggregation pipeline, might not share the same corruption. Also needs a free account.
+- Contact MTC/CUMTA directly for current data (per `docs/this-spec.md` section 4.2's fallback plan) — the only path guaranteed to be both current and correct, but the most labor-intensive.
+- Re-check Transitland periodically in case they re-fetch/fix the source.
 
-No backend or frontend changes are needed for this — `backend/src/otp/client.js` already handles BUS mode, and `backend/src/data/knownStops.js` just needs the bus stops added (or better, real geocoding via Nominatim per `docs/this-spec.md` section 6.1, which would make a hardcoded stop list unnecessary entirely).
+Once real bus data is in hand: no backend or frontend changes are needed — `backend/src/otp/client.js` already handles BUS mode, OTP merges multiple GTFS feeds automatically, and you'll want a wider OSM extract (Geofabrik's India extract, clipped to Chennai metro) rather than the per-station Overpass snippets used for rail, since buses need a real street network between arbitrary stops, not just short walks at stations.
 
 ## Rebuild the graph after any data change
 
