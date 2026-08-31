@@ -5,7 +5,7 @@
 
 // When the underlying GTFS feeds were last rebuilt from upstream. Surfaced
 // in the UI so riders can judge how current the schedule data is.
-export const dataGeneratedAt = "2026-08-14";
+export const dataGeneratedAt = "2026-08-31";
 
 export const knownStops = [
   { id: "5829", name: "12th Main Road", lat: 13.08508, lng: 80.20463 },
